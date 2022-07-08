@@ -1,0 +1,8 @@
+${purple}oooo                                     o8o  ${reset}${bold_white}光 ${hikari_version} ${thin_white}${hikari_git_sha1}${reset}
+${purple}`888                                     `"'  ${reset}${bold_white}interpreter:   ${thin_white}${python_implementation} ${python_version}${reset}
+${purple} 888  oooo   .ooooo.  ooo. .oo.  .oo.   oooo  ${reset}${bold_white}running on:    ${thin_white}${system_description}${reset}
+${purple} 888 .8P'   d88' `88b `888P"Y88bP"Y88b  `888  ${reset}${bold_white}author:        ${thin_white}Kierstro${reset}
+${purple} 888888.    888   888  888   888   888   888  
+${purple} 888 `88b.  888   888  888   888   888   888  
+${purple}o888o o888o `Y8bod8P' o888o o888o o888o o888o
+
