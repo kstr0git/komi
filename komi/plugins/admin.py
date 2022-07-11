@@ -15,6 +15,8 @@ c.execute("""CREATE TABLE IF NOT EXISTS warnings (
     memberID INTEGER,
     warningCount INTEGER
     )""")
+c.close
+db.close()
 
 #Command to delete messages
 @adminPlug.command
@@ -51,42 +53,50 @@ async def warn(ctx):
     reason = ctx.options.reason 
     guild = ctx.get_guild()
     memID = ctx.options.member.id
-
-    if memID == author.id:
-        await ctx.respond('You cannot warn yourself')
-    else:
-        await ctx.respond(f'A warning has been sent to {member} for {reason}')
-
-    c.execute(f"SELECT warningCount FROM warnings WHERE memberID={memID}")
-    result=c.fetchone()
-    #Very messy way of converting tuple to string (future fix pending)
-    count=int(str(result).strip("(,)"))+1
     
-    #checks if entry exists on the warning database and creates one if one doesn't exist
-    if result is None:
-        c.execute("INSERT INTO warnings (memberID, warningCount) VALUES (?,?)", (memID, 1))
-    else:
-        c.execute("UPDATE warnings SET warningCount=? WHERE memberID=?", (count, memID))
-    db.commit()
-    c.close()
-    db.close()
+    try:
+        if memID == author.id:
+            await ctx.respond('You cannot warn yourself')
+        else:
+            await ctx.respond(f'A warning has been sent to {member} for {reason}')
+            db = sqlite3.connect('warnings.db')
+            c = db.cursor()
+            c.execute(f"SELECT warningCount FROM warnings WHERE memberID={memID}")
+            result=c.fetchone()
+    
+            #checks if entry exists on the warning database and creates one if one doesn't exist
+            if result is None:
+                c.execute("INSERT INTO warnings (memberID, warningCount) VALUES (?,?)", (memID, 1))
+                count=1
+            else:
+                #Very messy way of converting tuple to string (future fix pending)
+                count=int(str(result).strip("(,)"))+1
+                c.execute("UPDATE warnings SET warningCount=? WHERE memberID=?", (count, memID))
+            db.commit()
+            c.close()
+            db.close()
 
-    await member.send(embed=hikari.Embed(
-        title=f"You've recieved a warning", 
-        description=f"{guild} Warning: You've been warned for the following reason: **{reason}**. \n You currently have **{count}** warnings. Further warnings will could result in potential ban", 
-        color=hikari.Color.of('#c27c0e')
-        ))
+            await member.send(embed=hikari.Embed(
+                title=f"You've recieved a warning", 
+                description=f"{guild} Warning: You've been warned for the following reason: **{reason}**. \n You currently have **{count}** warnings. Further warnings will could result in potential ban", 
+                color=hikari.Color.of('#c27c0e')
+                ))
+    except:
+        await ctx.respond('You do not have the permissions to run this command.')
 
 #Returns a count of warnings
 @adminPlug.command
 @lightbulb.command('warn-count', "Checks the total number of times you've had a warning", ephemeral=True)
 @lightbulb.implements(lightbulb.SlashCommand)
 async def warnCount(ctx):
+    db = sqlite3.connect('warnings.db')
+    c = db.cursor()
     author = ctx.author.id
     c.execute(f"SELECT warningCount FROM warnings WHERE memberID={author}")
     result=c.fetchone()
     count=int(str(result).strip("(,)"))
     c.close()
+    db.close()
     
     await ctx.respond(f"You've recieved a total of **{count}** warnings. \n You can request to appeal warnings via `/appeal`")
 
