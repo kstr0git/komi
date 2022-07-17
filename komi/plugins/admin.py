@@ -2,10 +2,10 @@ import asyncio
 from audioop import add
 from genericpath import exists
 from itertools import count
-import warnings
 import hikari
 import lightbulb
 import sqlite3
+import datetime
 
 adminPlug = lightbulb.Plugin('Admin')
 
@@ -21,28 +21,29 @@ db.close()
 #Command to delete messages
 @adminPlug.command
 @lightbulb.add_checks(lightbulb.has_guild_permissions(hikari.Permissions.MANAGE_MESSAGES), lightbulb.guild_only)
-@lightbulb.option('messages', 'The number of messages to delete', type=int, required=True,)
+@lightbulb.option('messages', 'The number of messages to delete', type=int, required=True, min_value=1, max_value=1000)
 @lightbulb.command('purge', 'Purge messages in the channel')
 @lightbulb.implements(lightbulb.SlashCommand)
 async def purge(ctx):
     try:
         msgNum = ctx.options.messages
-        channel = ctx.channel_id 
-        msgs = await ctx.bot.rest.fetch_messages(channel).limit(msgNum)
+        channel = ctx.channel_id
+        #Fetches only the messages younger than 14 days when command is invoked (bots can only delete messages less than 14 days)
+        msgs = await ctx.bot.rest.fetch_messages(channel).take_until(lambda m: datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=14) > m.created_at).limit(msgNum)
         await ctx.bot.rest.delete_messages(channel, msgs)
 
-        response = await ctx.respond(f'{len(msgs)} messages deleted')
+        response = await ctx.respond(f'{len(msgs)} messages deleted.')
         await asyncio.sleep(5)
         await response.delete()
         
     except:
-        response = await ctx.respond('You can only bulk delete messages posted within 2 weeks. No messages deleted, reduce the number of messages to purge.')
+        response = await ctx.respond('Could not find any messages to delete.')
         await asyncio.sleep(5)
         await response.delete()
 
 #Command to issue warnings to users and log warning on SQL database
 @adminPlug.command
-@lightbulb.add_checks(lightbulb.has_guild_permissions(hikari.Permissions.KICK_MEMBERS))
+@lightbulb.add_checks(lightbulb.has_guild_permissions(hikari.Permissions.ADMINISTRATOR))
 @lightbulb.option('member', 'Member you are warning', type=hikari.User, required=True,)
 @lightbulb.option('reason', 'reason you are warning member', required=False, default='No reason given', type=str)
 @lightbulb.command('warn', 'Warn member of rule violation (Admin)',ephemeral=True)
@@ -66,12 +67,12 @@ async def warn(ctx):
     
             #checks if entry exists on the warning database and creates one if one doesn't exist
             if result is None:
-                c.execute("INSERT INTO warnings (memberID, warningCount) VALUES (?,?)", (memID, 1))
                 count=1
+                c.execute("INSERT INTO warnings (memberID, warningCount) VALUES (?,?)", (memID, 1))
             else:
-                #Very messy way of converting tuple to string (future fix pending)
-                count=int(str(result).strip("(,)"))+1
+                count=result[0]+1
                 c.execute("UPDATE warnings SET warningCount=? WHERE memberID=?", (count, memID))
+                
             db.commit()
             c.close()
             db.close()
@@ -86,19 +87,27 @@ async def warn(ctx):
 
 #Returns a count of warnings
 @adminPlug.command
-@lightbulb.command('warn-count', "Checks the total number of times you've had a warning", ephemeral=True)
+@lightbulb.add_checks(lightbulb.has_guild_permissions(hikari.Permissions.ADMINISTRATOR))
+@lightbulb.option('member', 'Member you are checking', type=hikari.User, required=True,)
+@lightbulb.command('warn-count', "Checks the total number of times a member has had a warning", ephemeral=True)
 @lightbulb.implements(lightbulb.SlashCommand)
 async def warnCount(ctx):
+    member = ctx.options.member
     db = sqlite3.connect('warnings.db')
     c = db.cursor()
-    author = ctx.author.id
-    c.execute(f"SELECT warningCount FROM warnings WHERE memberID={author}")
-    result=c.fetchone()
-    count=int(str(result).strip("(,)"))
-    c.close()
-    db.close()
-    
-    await ctx.respond(f"You've recieved a total of **{count}** warnings. \n You can request to appeal warnings via `/appeal`")
+    try:
+        c.execute(f"SELECT warningCount FROM warnings WHERE memberID={member.id}")
+        result=c.fetchone()
+        count=result[0]
+        c.close()
+        db.close()
+
+        if result is None:
+            await ctx.respond(f'{member} currently has not no warnings.')
+        else:
+            await ctx.respond(f'{member} has recieved a total of **{count}** warnings.')
+    except:
+        await ctx.respond('You do not have the permissions to run this command.')
 
 #Command to anonymously report users to mods 
 @adminPlug.command
@@ -122,6 +131,52 @@ async def report(ctx):
             description=f'A report has been made against {member} for **{reason}**. \n Please could you investigate this issue and attempt to resolve any conflicts. Perhaps issue a warning?',
             color=hikari.Color.of('#14a2d3')
             ))
+
+#Command to timeout users
+@adminPlug.command
+@lightbulb.add_checks(lightbulb.has_guild_permissions(hikari.Permissions.ADMINISTRATOR))
+@lightbulb.option('reason', 'Reason you are timingout the member', required=False, default='No reason given', type=str)
+@lightbulb.option('member', 'Member to timeout', required=True, type=hikari.User)
+@lightbulb.option('minutes', 'How long you would like the member to be timeouted for in minutes', required=True, type=int)
+@lightbulb.command('timeout', 'Timeouts a member', ephemeral=True)
+@lightbulb.implements(lightbulb.SlashCommand)
+async def timeout(ctx: lightbulb.Context):
+    targetTime = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=ctx.options.minutes)
+    member = ctx.options.member
+    reason = ctx.options.reason
+    author = ctx.author
+
+    try:
+        if member.id == author.id:
+            await ctx.respond('You cannot time yourself out')
+        else:
+            await member.send(f"You've been timedout for the following reason: **{reason}** \n The timeout will expire at {targetTime}")
+            await member.edit(communication_disabled_until=targetTime)
+            ctx.respond(f'{member} has been timedout until {targetTime}')
+    except:
+        await ctx.respond('You do not have the permissions to run this command.')
+
+#Command to ban members 
+@adminPlug.command
+@lightbulb.add_checks(lightbulb.has_guild_permissions(hikari.Permissions.ADMINISTRATOR))
+@lightbulb.option("reason", "Reason for the ban",required=False, default='No reason given', type=str)
+@lightbulb.option("member", "Member to ban",type=hikari.User, required=True)
+@lightbulb.command('ban', 'Bans a member from the server')
+@lightbulb.implements(lightbulb.SlashCommand)
+async def ban(ctx):
+    guild = ctx.get_guild()
+    member = ctx.options.member
+    reason = ctx.options.reason
+    author = ctx.author
+
+    try:
+        if member.id == author.id:
+            await ctx.respond('You cannot ban yourself')
+        else:
+            await ctx.bot.rest.ban_user(guild, member.id)
+            await ctx.respond(f'{member} has been banned for the following reason: **{reason}**.')
+    except:
+        await ctx.respond('You do not have the permissions to run this command.')
     
 def load(bot: lightbulb.BotApp) -> None:
     bot.add_plugin(adminPlug)
