@@ -15,7 +15,7 @@ A simple Discord slash-command bot made using
 * [`Lightbulb`](https://github.com/tandemdude/hikari-lightbulb/) - A flexible command framework designed to extend Hikari.
 <br>
 
-Why Slash commands over prefixes? [Read me](https://discord.com/blog/welcome-to-the-new-era-of-discord-apps)
+Why slash-commands over prefixes? [Read me](https://discord.com/blog/welcome-to-the-new-era-of-discord-apps)
 
 ## Current Commands
 Komi is a personal project however, I'm currently working on fleshing out the commands (*11/07/2022*).
