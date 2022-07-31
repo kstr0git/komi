@@ -7,10 +7,10 @@
 <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/Kierstro/komi">
 </div>
 <br>
+<img src="https://user-images.githubusercontent.com/38412336/182039655-f99324e5-0373-4573-b531-4f669f4ccd59.gif">
+<br>
 A simple Discord slash-command bot made using
 <br>
-<br>
-<img src="https://user-images.githubusercontent.com/38412336/182039655-f99324e5-0373-4573-b531-4f669f4ccd59.gif">
 <br>
 
 * [`Hikari`](https://github.com/hikari-py/hikari) - An opinionated, static typed Discord microframework for Python3 and asyncio that supports Discord's V8 REST API and Gateway.
