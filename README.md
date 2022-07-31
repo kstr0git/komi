@@ -1,5 +1,5 @@
 <div align="center">
-<img src="https://user-images.githubusercontent.com/38412336/182039395-5a80e181-d4eb-4ae7-9dbb-06c80e54e1c8.gif"/>
+<img src="https://user-images.githubusercontent.com/38412336/178167112-97ebf89f-c20f-415c-bf82-cd6aca271505.png">
 <h1>Komi</h1>
 <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/Kierstro/komi?style=social">
 <img height="20" alt="Discord invite" src="https://discord.com/api/guilds/972183434522947584/widget.png">
@@ -9,6 +9,8 @@
 <br>
 A simple Discord slash-command bot made using
 <br>
+<br>
+<img src="https://user-images.githubusercontent.com/38412336/182039655-f99324e5-0373-4573-b531-4f669f4ccd59.gif">
 <br>
 
 * [`Hikari`](https://github.com/hikari-py/hikari) - An opinionated, static typed Discord microframework for Python3 and asyncio that supports Discord's V8 REST API and Gateway.
