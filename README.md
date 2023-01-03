@@ -1,5 +1,4 @@
 <div align="center">
-<img src="https://user-images.githubusercontent.com/38412336/178167112-97ebf89f-c20f-415c-bf82-cd6aca271505.png">
 <h1>Komi</h1>
 <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/Kierstro/komi?style=social">
 <img height="20" alt="Discord invite" src="https://discord.com/api/guilds/972183434522947584/widget.png">
