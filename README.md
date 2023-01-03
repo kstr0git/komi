@@ -35,7 +35,7 @@ You will need to configure the bot with the `static` files. This is needed to st
 
 1. Clone the repository
    ```sh
-   git clone https://github.com/Kierstro/komi.git
+   git clone https://github.com/kstr-0/komi.git
    cd komi
    ```
 
