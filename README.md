@@ -1,7 +1,6 @@
 <div align="center">
 <h1>Komi</h1>
 <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/Kierstro/komi?style=social">
-<img height="20" alt="Discord invite" src="https://discord.com/api/guilds/972183434522947584/widget.png">
 <a href="https://github.com/Kierstro/komi/issues"><img alt="GitHub issues" src="https://img.shields.io/github/issues-raw/Kierstro/komi"></a>
 <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/Kierstro/komi">
 </div>
